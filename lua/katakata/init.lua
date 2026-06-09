@@ -1,49 +1,48 @@
 local M = {}
-local mpv_handle = nil
+local type_sound_count = 4
 
-local function get_socket_path()
-  if vim.fn.has("win32") == 1 then
-    return [[\\.\pipe\katakata-mpv-sock]]
-  else
-    local runtime_dir = os.getenv("XDG_RUNTIME_DIR") or "/tmp"
-    return runtime_dir .. "/katakata-mpv.sock"
-  end
+local last_type_time = 0
+local type_threshold = 15
+
+--@alias typesound "normal" | "space" | "indent" | "enter"
+
+--@param type typesound
+local function play_sound(type)
+  local file_name = string.format("type%02d.wav", math.random(type_sound_count))
+  local sound_path = "./audio/" .. file_name
+  sound_path = vim.fn.fnamemodify(sound_path, ":p")
+  vim.system({"aplay", sound_path}, 
+    function(job)
+    end
+  )
+
 end
 
-local function stop_mpv()
-  if mpv_handle and not mpv_handle:is_closing() then
-    mpv_handle:kill(15)
-    mpv_handle:close()
-    mpv_handle = nil
-  end
-end
 
 function M.setup()
-  local uv = vim.uv or vim.loop
-  local socket_path = get_socket_path()
-  mpv_handle, pid = uv.spawn("mpv", {
-    args = {"--idle", "--input-ipc-server=" .. socket_path},
-    detached = false,
-  }, function(code, signal)
-    if mpv_handle then
-      mpv_handle:close()
-      mpv_handle = nil
-    end
-  end)
 
-  vim.api.nvim_create_autocmd("VimLeavePre", {
-    callback = function()
-      if mpv_handle then
-        stop_mpv()
-      end
+  local ns = vim.api.nvim_create_namespace("katakata_key_listener")
+
+  vim.on_key(function(key)
+    if key == "" then return end
+    
+    local current_time = vim.loop.hrtime() / 1000000
+
+    if (current_time - last_type_time) < type_threshold then
+      last_type_time = current_time
+      return
     end
-  })
+    
+    last_type_time = current_time
+
+    play_sound("normal")
+  end, ns)
+
   print("Plugin loaded!")
 end
 
 function M.hello()
   print("Hello from Plugin!")
-  print(get_socket_path())
 end
 
 
