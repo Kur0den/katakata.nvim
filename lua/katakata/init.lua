@@ -26,7 +26,7 @@ local function type_sound(type)
 end
 
 local function bell_sound()
-  local sound_path = "./audio/" .. type .. ".wav"
+  local sound_path = "./audio/bell.wav"
   sound_path = vim.fn.fnamemodify(sound_path, ":p")
   vim.system({"aplay", sound_path})
 end
@@ -40,7 +40,6 @@ function M.setup()
     if key == "" then return end
     
     local mode = vim.api.nvim_get_mode().mode
-    vim.notify("mode: " .. mode, vim.log.levels.INFO)
 
     if not (mode == "i" or mode == "c" or mode == "t") then return end
 
@@ -63,6 +62,13 @@ function M.setup()
       type_sound("normal")
     end
   end, ns)
+
+  vim.api.nvim_create_autocmd("CompleteDone", {
+    pattern = "*",
+    callback = function()
+      bell_sound()
+    end
+  })
 
   print("Plugin loaded!")
 end
