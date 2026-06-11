@@ -70,7 +70,6 @@ function M.setup()
     end
   })
 
-  print("Plugin loaded!")
 end
 
 function M.hello()
