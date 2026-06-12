@@ -12,6 +12,12 @@ local function get_path(path)
   end
 end
 
+local function bell_sound()
+  local sound_path = "audio/bell.wav"
+  sound_path = get_path(sound_path)
+  vim.system({"aplay", sound_path})
+end
+
 --@alias typesound "normal" | "space" | "tab" | "return"
 
 --@param type typesound
@@ -32,14 +38,14 @@ local function type_sound(type)
     sound_path = get_path(sound_path)
     vim.system({"aplay", sound_path})
   end
+  
+  local mode = vim.api.nvim_get_mode().mode
+  if type == "return" and mode == "c" then
+    bell_sound()
+  end
 end
 
 
-local function bell_sound()
-  local sound_path = "audio/bell.wav"
-  sound_path = get_path(sound_path)
-  vim.system({"aplay", sound_path})
-end
 
 
 function M.setup()
